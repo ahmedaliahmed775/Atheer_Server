@@ -2,6 +2,7 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import rateLimit from 'express-rate-limit';
 import 'dotenv/config';
 import { User, Wallet } from '../models/index.js';
 
@@ -12,6 +13,16 @@ if (!process.env.JWT_SECRET) {
 
 const JWT_SECRET = process.env.JWT_SECRET || 'atheer_dev_secret_not_for_production';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+
+// تحديد معدل طلبات المصادقة للحماية من هجمات القوة العمياء
+// يسمح بـ 10 محاولات تسجيل دخول كل 15 دقيقة لكل عنوان IP
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'تجاوزت الحد المسموح به من محاولات تسجيل الدخول. يرجى المحاولة بعد 15 دقيقة.' },
+});
 
 const router = express.Router();
 
@@ -25,7 +36,7 @@ const MERCHANT_INITIAL_BALANCE = 0.0;
  * تسجيل حساب جديد (عميل أو تاجر)
  * يُنشئ المستخدم ومحفظته في نفس الوقت
  */
-router.post('/signup', async (req, res) => {
+router.post('/signup', authLimiter, async (req, res) => {
   try {
     const { phone, password, name, role } = req.body;
 
@@ -103,7 +114,7 @@ router.post('/signup', async (req, res) => {
  * POST /api/v1/auth/login
  * تسجيل الدخول وإرجاع رمز الوصول JWT
  */
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   try {
     const { phone, password } = req.body;
 

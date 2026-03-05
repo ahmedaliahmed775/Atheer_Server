@@ -1,11 +1,23 @@
 // مسار الشحن للتاجر: معالجة طلبات الدفع اللاتصالي عبر NFC
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import { sequelize, Wallet, Transaction } from '../models/index.js';
 import authenticate from '../middleware/authenticate.js';
 
+// تحديد معدل الطلبات لعمليات الشحن للحماية من هجمات الإغراق
+// يسمح بـ 30 طلب شحن كل 15 دقيقة لكل عنوان IP
+const chargeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'تجاوزت الحد المسموح به من طلبات الشحن. يرجى المحاولة لاحقاً.' },
+});
+
 const router = express.Router();
 
-// تطبيق وسيط المصادقة على جميع مسارات التاجر
+// تطبيق وسيط المصادقة وتحديد معدل الطلبات على جميع مسارات التاجر
+router.use(chargeLimiter);
 router.use(authenticate);
 
 /**

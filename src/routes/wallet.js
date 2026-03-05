@@ -1,12 +1,24 @@
 // مسارات المحفظة: استعراض الرصيد وسجل المعاملات
 import express from 'express';
 import { Op } from 'sequelize';
+import rateLimit from 'express-rate-limit';
 import { Wallet, Transaction } from '../models/index.js';
 import authenticate from '../middleware/authenticate.js';
 
+// تحديد معدل الطلبات للحماية من هجمات الإغراق
+// يسمح بـ 100 طلب كل 15 دقيقة لكل عنوان IP
+const walletLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'تجاوزت الحد المسموح به من الطلبات. يرجى المحاولة لاحقاً.' },
+});
+
 const router = express.Router();
 
-// تطبيق وسيط المصادقة على جميع مسارات المحفظة
+// تطبيق وسيط المصادقة وتحديد معدل الطلبات على جميع مسارات المحفظة
+router.use(walletLimiter);
 router.use(authenticate);
 
 /**
