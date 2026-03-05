@@ -1,0 +1,26 @@
+{
+  "name": "atheer-server",
+  "version": "1.0.0",
+  "description": "خادم نظام Atheer للمدفوعات اللاتصالية عبر NFC",
+  "main": "src/app.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node --watch src/app.js"
+  },
+  "dependencies": {
+    "@adminjs/express": "^6.1.1",
+    "@adminjs/sequelize": "^4.1.1",
+    "adminjs": "^7.8.17",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-formidable": "^1.2.0",
+    "express-rate-limit": "^8.3.0",
+    "express-session": "^1.17.3",
+    "jsonwebtoken": "^9.0.2",
+    "express-rate-limit": "^8.3.0",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.35.0"
+  }
+}
