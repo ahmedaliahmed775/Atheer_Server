@@ -33,14 +33,14 @@ services:
         value: ${db.PASSWORD}
       - key: JWT_SECRET
         type: SECRET
-        value: CHANGE_ME_TO_A_SECURE_SECRET
+        value: "EWJhbGciOiJIUzI1NiIsInR5cCI6Replace-With-Secure-Secret"
       - key: JWT_EXPIRES_IN
         value: 7d
       - key: ADMIN_EMAIL
         value: admin@atheer.app
       - key: ADMIN_PASSWORD
         type: SECRET
-        value: CHANGE_ME_TO_A_SECURE_PASSWORD
+        value: "Replace-With-Secure-Password"
 
 databases:
   - name: db
