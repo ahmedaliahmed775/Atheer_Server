@@ -3,6 +3,9 @@ import { AdminJS } from 'adminjs';
 import { buildAuthenticatedRouter } from '@adminjs/express';
 import { Database, Resource } from '@adminjs/sequelize';
 import { sequelize, User, Wallet, Transaction } from '../models/index.js';
+import session from 'express-session';
+import connectPgSimple from 'connect-pg-simple';
+import pg from 'pg';
 import 'dotenv/config';
 
 // التحقق من وجود الإعدادات الأمنية المطلوبة للوحة الإدارة
@@ -15,6 +18,22 @@ if (!process.env.JWT_SECRET) {
 
 // مفتاح تشفير ملفات تعريف الارتباط (يجب أن يكون 32 حرفاً على الأقل)
 const COOKIE_SECRET = process.env.JWT_SECRET || 'atheer_dev_cookie_secret_32_chars_!';
+
+// إعداد مخزن الجلسات باستخدام PostgreSQL لتجنب تحذير MemoryStore في الإنتاج
+const PgSession = connectPgSimple(session);
+const pgPool = new pg.Pool({
+  host: process.env.DB_HOST,
+  port: parseInt(process.env.DB_PORT || '5432', 10),
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  ...(process.env.NODE_ENV === 'production' && {
+    ssl: { require: true, rejectUnauthorized: false },
+  }),
+});
+
+// إغلاق مجموعة اتصالات الجلسات عند إيقاف الخادم بشكل نظيف
+process.on('SIGTERM', () => pgPool.end());
 
 // تسجيل محوّل Sequelize مع AdminJS
 AdminJS.registerAdapter({ Database, Resource });
@@ -93,10 +112,14 @@ const setupAdmin = (app) => {
     },
     null,
     {
-      // إعدادات الجلسة لحماية لوحة الإدارة
+      // إعدادات الجلسة لحماية لوحة الإدارة مع مخزن PostgreSQL
       resave: false,
       saveUninitialized: true,
       secret: COOKIE_SECRET,
+      store: new PgSession({
+        pool: pgPool,
+        createTableIfMissing: true,
+      }),
       cookie: {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',

@@ -28,6 +28,9 @@ COPY src ./src
 ENV NODE_ENV=production
 ENV PORT=3000
 
+# منح صلاحيات الكتابة للمستخدم على مجلد التطبيق
+RUN chown -R appuser:appgroup /app
+
 # تشغيل التطبيق بمستخدم غير root
 USER appuser
 
