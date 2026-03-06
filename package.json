@@ -8,6 +8,9 @@
     "start": "node src/app.js",
     "dev": "node --watch src/app.js"
   },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "@adminjs/express": "^6.1.1",
     "@adminjs/sequelize": "^4.1.1",
