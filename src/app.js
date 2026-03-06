@@ -85,7 +85,9 @@ const startServer = async () => {
     console.log('✅ تم مزامنة نماذج قاعدة البيانات');
 
     // تشغيل الخادم على المنفذ المحدد
-    app.listen(PORT, () => {
+    // تشغيل الخادم على المنفذ المحدد والسماح بالاتصالات الخارجية
+   // تشغيل الخادم على المنفذ المحدد والسماح بالاتصالات الخارجية
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`\n🚀 خادم Atheer يعمل على المنفذ ${PORT}`);
       console.log(`📊 لوحة الإدارة: http://localhost:${PORT}/admin`);
       console.log(`🔗 واجهة API: http://localhost:${PORT}/api/v1`);
