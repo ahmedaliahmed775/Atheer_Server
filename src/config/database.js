@@ -12,14 +12,19 @@ const sequelize = new Sequelize(
     port: parseInt(process.env.DB_PORT || '5432', 10),
     dialect: 'postgres',
     logging: process.env.NODE_ENV === 'development' ? console.log : false,
+    
+    // التعديل هنا: تفعيل SSL إجبارياً في بيئة الإنتاج (DigitalOcean)
+    dialectOptions: process.env.NODE_ENV === 'production' ? {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    } : {},
+
     pool: {
-      // الحد الأقصى لعدد الاتصالات المتزامنة
       max: 10,
-      // الحد الأدنى للاتصالات المحتفظ بها
       min: 0,
-      // الوقت الأقصى للانتظار قبل رفع خطأ (بالمللي ثانية)
       acquire: 30000,
-      // الوقت الذي يُعتبر بعده الاتصال الخامل قابلاً للإغلاق (بالمللي ثانية)
       idle: 10000,
     },
   }
