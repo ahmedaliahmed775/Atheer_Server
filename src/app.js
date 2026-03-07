@@ -10,14 +10,17 @@ import setupAdmin from './admin/index.js';
 const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
 
-// وسيط تحليل طلبات JSON
+// الثقة في البروكسي (مهم جداً لمنصات مثل Render للتعرف على الـ IP الحقيقي وتجنب حظر المستخدمين)
+app.set('trust proxy', 1);
+
+// ===== إعداد لوحة الإدارة AdminJS =====
+// ⚠️ خطوة مهمة جداً: يجب إعداد AdminJS قبل أي وسيط (Middleware) لتحليل البيانات
+setupAdmin(app);
+
+// وسيط تحليل طلبات JSON (تم نقله ليصبح بعد إعداد الإدارة لتجنب خطأ OldBodyParserUsedError)
 app.use(express.json());
 // وسيط تحليل طلبات النماذج المشفرة بـ URL
 app.use(express.urlencoded({ extended: true }));
-
-// ===== إعداد لوحة الإدارة AdminJS =====
-// يجب إضافة مسار الإدارة قبل بقية المسارات
-setupAdmin(app);
 
 // ===== مسارات API =====
 // مسارات المصادقة: تسجيل الحساب وتسجيل الدخول
@@ -54,8 +57,14 @@ app.get('/', (req, res) => {
 });
 
 // معالج الأخطاء العامة
-app.use((err, req, res, _next) => {
+app.use((err, req, res, next) => {
   console.error('خطأ غير متوقع:', err);
+
+  // التحقق مما إذا كان الرد قد تم إرساله بالفعل لتجنب خطأ ERR_HTTP_HEADERS_SENT
+  if (res.headersSent) {
+    return next(err);
+  }
+
   res.status(500).json({
     success: false,
     message: 'حدث خطأ داخلي غير متوقع في الخادم',
@@ -84,9 +93,7 @@ const startServer = async () => {
     await sequelize.sync({ alter: process.env.NODE_ENV === 'development' });
     console.log('✅ تم مزامنة نماذج قاعدة البيانات');
 
-    // تشغيل الخادم على المنفذ المحدد
     // تشغيل الخادم على المنفذ المحدد والسماح بالاتصالات الخارجية
-   // تشغيل الخادم على المنفذ المحدد والسماح بالاتصالات الخارجية
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`\n🚀 خادم Atheer يعمل على المنفذ ${PORT}`);
       console.log(`📊 لوحة الإدارة: http://localhost:${PORT}/admin`);
